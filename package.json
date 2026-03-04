@@ -1,0 +1,36 @@
+{
+  "name": "dmv-eats-monorepo",
+  "version": "0.1.0",
+  "description": "AI-powered restaurant discovery for DC/Maryland/Virginia",
+  "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "apps/backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:integration": "pnpm -r run test:integration",
+    "test:e2e": "pnpm -r run test:e2e",
+    "lint": "pnpm -r run lint",
+    "format": "pnpm -r run format",
+    "type-check": "pnpm -r run type-check",
+    "clean": "pnpm -r exec rm -rf node_modules dist .next .expo",
+    "install-all": "pnpm install && pnpm -r install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.7.2",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

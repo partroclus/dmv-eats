@@ -1,0 +1,93 @@
+# Environment
+.env
+.env.local
+.env.*.local
+.env.test
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+build/
+
+# Mobile
+.vscode/
+.idea/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.DS_Store
+*.apk
+*.ipa
+
+# Backend
+.next/
+out/
+.env.production.local
+.env.test.local
+
+# Database
+.supabase/
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Misc
+*.pem
+.cache/
+.parcel-cache
+dist/
+build/
+out/
+
+# Yarn
+.yarn/install-state.gz
+
+# secrets
+secrets/
+.secrets
