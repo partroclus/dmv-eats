@@ -1,0 +1,164 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String     @id @default(cuid())
+  clerkId           String     @unique
+  email             String     @unique
+  displayName       String?
+  
+  // Profile
+  homeLocation      Json?      // { lat, lng }
+  workLocation      Json?
+  dietaryRestrictions String[]
+  preferences       Json?      // { cuisine, priceLevel, etc }
+  
+  // Gamification
+  points            Int        @default(0)
+  badges            String[]
+  passportStamps    Json       @default("{}")
+  
+  // Account
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  // Relations
+  checkins          Checkin[]
+  favoritedVenues   Restaurant[] @relation("Favorites")
+  posts             Post[]
+  followers         User[]     @relation("UserFollows")
+  following         User[]     @relation("UserFollows")
+}
+
+model Restaurant {
+  id                String     @id @default(cuid())
+  name              String
+  address           String
+  city              String
+  state             String
+  zipCode           String
+  latitude          Float
+  longitude         Float
+  
+  // Cuisine & attributes
+  cuisineTypes      String[]   // ['ethiopian', 'vegan', etc]
+  priceLevel        Int        @db.SmallInt // 1-4
+  rating            Float?
+  totalReviews      Int        @default(0)
+  
+  // Tags & filters
+  ownershipTags     String[]   // ['black_owned', 'immigrant_owned']
+  dietaryOptions    String[]   // ['vegan', 'gluten_free']
+  ambiance          String?    // 'quiet', 'lively', etc
+  noiseLevel        Int?       // 1-100 dB estimate
+  
+  // Contact & hours
+  phone             String?
+  website           String?
+  hoursJson         Json?      // { monday: {open, close}, ... }
+  
+  // Real-time
+  currentWait       Int?       // minutes
+  occupancyLevel    String?    // 'empty', 'moderate', 'busy', 'packed'
+  
+  // Media
+  photoUrl          String?
+  menuUrl           String?
+  
+  // Metadata
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  // Relations
+  checkins          Checkin[]
+  posts             Post[]
+  favoritedBy       User[]     @relation("Favorites")
+  reviews           Review[]
+}
+
+model Checkin {
+  id                String     @id @default(cuid())
+  userId            String
+  restaurantId      String
+  
+  // Vibe & crowd
+  vibeTags          String[]   // ['quiet', 'date_night', etc]
+  safetyRating      Int?       // 1-5
+  crowdLevel        String?    // 'empty', 'moderate', 'busy', 'packed'
+  
+  createdAt         DateTime   @default(now())
+  
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([restaurantId])
+}
+
+model Post {
+  id                String     @id @default(cuid())
+  userId            String
+  restaurantId      String?
+  
+  caption           String?
+  imageUrl          String?
+  likes             Int        @default(0)
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant        Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([restaurantId])
+}
+
+model Review {
+  id                String     @id @default(cuid())
+  restaurantId      String
+  
+  rating            Int        // 1-5
+  content           String?
+  createdAt         DateTime   @default(now())
+  
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  @@index([restaurantId])
+}
+
+model Trail {
+  id                String     @id @default(cuid())
+  name              String
+  description       String?
+  category          String     // 'ethiopian', 'korean', 'black_owned'
+  stops             Json       // Array of {restaurantId, order, narrative}
+  badges            String[]
+  difficulty        String?    // 'easy', 'moderate', 'challenging'
+  estimatedTimeHours Float?
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model Event {
+  id                String     @id @default(cuid())
+  title             String
+  description       String?
+  venue             String?
+  latitude          Float?
+  longitude         Float?
+  eventType         String     // 'sports', 'concert', 'festival'
+  startTime         DateTime
+  endTime           DateTime?
+  crowdImpact       String?    // 'low', 'medium', 'high'
+  
+  createdAt         DateTime   @default(now())
+}
