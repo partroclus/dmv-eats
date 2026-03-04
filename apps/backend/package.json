@@ -15,7 +15,9 @@
     "type-check": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "import:restaurants": "node --loader tsx ./src/jobs/import-restaurants.ts",
+    "import:test": "node --loader tsx ./src/jobs/import-restaurants.ts --limit 100"
   },
   "dependencies": {
     "fastify": "^5.7.4",
@@ -35,7 +37,8 @@
     "node-cron": "^3.0.2",
     "winston": "^3.11.0",
     "dotenv": "^16.3.1",
-    "@clerk/backend": "^0.42.0"
+    "@clerk/backend": "^0.42.0",
+    "axios": "^1.6.5"
   },
   "devDependencies": {
     "typescript": "^5.7.2",
