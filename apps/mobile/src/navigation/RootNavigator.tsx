@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SearchScreen } from '../screens/SearchScreen';
 import { MapScreen } from '../screens/MapScreen';
+import { DetailScreen } from '../screens/DetailScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -14,6 +15,7 @@ const SearchNavigator = () => (
     }}
   >
     <Stack.Screen name="SearchList" component={SearchScreen} />
+    <Stack.Screen name="Detail" component={DetailScreen} options={{ presentation: 'modal' }} />
   </Stack.Navigator>
 );
 
@@ -24,6 +26,7 @@ const MapNavigator = () => (
     }}
   >
     <Stack.Screen name="MapView" component={MapScreen} />
+    <Stack.Screen name="Detail" component={DetailScreen} options={{ presentation: 'modal' }} />
   </Stack.Navigator>
 );
 
