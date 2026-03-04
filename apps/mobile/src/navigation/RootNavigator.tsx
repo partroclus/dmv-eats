@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SearchScreen } from '../screens/SearchScreen';
 import { MapScreen } from '../screens/MapScreen';
 import { DetailScreen } from '../screens/DetailScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -30,8 +31,15 @@ const MapNavigator = () => (
   </Stack.Navigator>
 );
 
-const FavoritesScreen = () => (
-  <SearchScreen />
+const FavoritesNavigator = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+    }}
+  >
+    <Stack.Screen name="FavoritesList" component={FavoritesScreen} />
+    <Stack.Screen name="Detail" component={DetailScreen} options={{ presentation: 'modal' }} />
+  </Stack.Navigator>
 );
 
 const SettingsScreen = () => (
@@ -64,7 +72,7 @@ export const RootNavigator = () => (
     />
     <Tab.Screen
       name="Favorites"
-      component={FavoritesScreen}
+      component={FavoritesNavigator}
       options={{
         title: 'Favorites',
         tabBarLabel: '❤️',
