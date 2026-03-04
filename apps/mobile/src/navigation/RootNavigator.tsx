@@ -1,8 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
 import { SearchScreen } from '../screens/SearchScreen';
+import { MapScreen } from '../screens/MapScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -17,16 +17,22 @@ const SearchNavigator = () => (
   </Stack.Navigator>
 );
 
-const MapScreen = () => (
-  <Text style={{ flex: 1, justifyContent: 'center' }}>Map (Day 4-5)</Text>
+const MapNavigator = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+    }}
+  >
+    <Stack.Screen name="MapView" component={MapScreen} />
+  </Stack.Navigator>
 );
 
 const FavoritesScreen = () => (
-  <Text style={{ flex: 1, justifyContent: 'center' }}>Favorites (Day 9-10)</Text>
+  <SearchScreen />
 );
 
 const SettingsScreen = () => (
-  <Text style={{ flex: 1, justifyContent: 'center' }}>Settings (Day 13-14)</Text>
+  <SearchScreen />
 );
 
 export const RootNavigator = () => (
@@ -47,7 +53,7 @@ export const RootNavigator = () => (
     />
     <Tab.Screen
       name="Map"
-      component={MapScreen}
+      component={MapNavigator}
       options={{
         title: 'Map',
         tabBarLabel: '🗺️',
