@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+import { writeFileSync } from 'fs';
+
+const GOOGLE_API_KEY = 'AIzaSyDuIYmwniEwfugu2b8PHgjdGKKMBPujYNQ';
+const SUPABASE_URL = 'https://ktllbxtstalvglqsjzdi.supabase.co';
+const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0bGxieHRzdGFsdmdscXNqemRpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjU4NTU4MiwiZXhwIjoyMDg4MTYxNTgyfQ.KNONN8kG7D1FY-kLHkU92LJd-Gydd-5-G15eNytT4Nk';
+
+const locations = [
+  { name: 'Washington DC Downtown', lat: 38.9072, lng: -77.0369 },
+  { name: 'Arlington VA', lat: 38.8816, lng: -77.1043 },
+  { name: 'Baltimore MD', lat: 39.2904, lng: -76.6122 },
+  { name: 'Silver Spring MD', lat: 38.9914, lng: -77.0341 },
+  { name: 'Bethesda MD', lat: 38.9845, lng: -77.0948 },
+  { name: 'Alexandria VA', lat: 38.8048, lng: -77.0469 },
+];
+
+async function searchRestaurants(query, lat, lng) {
+  try {
+    const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
+    url.searchParams.append('query', `${query} restaurants`);
+    url.searchParams.append('location', `${lat},${lng}`);
+    url.searchParams.append('radius', '50000');
+    url.searchParams.append('key', GOOGLE_API_KEY);
+
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('Search error:', error.message);
+    return [];
+  }
+}
+
+async function getPlaceDetails(placeId) {
+  try {
+    const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');
+    url.searchParams.append('place_id', placeId);
+    url.searchParams.append(
+      'fields',
+      'name,formatted_address,geometry,rating,user_ratings_total,international_phone_number,website,price_level,types'
+    );
+    url.searchParams.append('key', GOOGLE_API_KEY);
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const place = data.result;
+
+    if (!place) return null;
+
+    return {
+      name: place.name,
+      address: place.formatted_address,
+      latitude: place.geometry.location.lat,
+      longitude: place.geometry.location.lng,
+      rating: place.rating || null,
+      totalReviews: place.user_ratings_total || 0,
+      phone: place.international_phone_number || null,
+      website: place.website || null,
+      priceLevel: place.price_level || 2,
+      cuisineTypes: mapCuisineType(place.types || []),
+    };
+  } catch (error) {
+    console.error('Details error:', error.message);
+    return null;
+  }
+}
+
+function mapCuisineType(types) {
+  const cuisineMap = {
+    american_restaurant: 'american',
+    asian_restaurant: 'asian',
+    chinese_restaurant: 'chinese',
+    ethiopian_restaurant: 'ethiopian',
+    french_restaurant: 'french',
+    indian_restaurant: 'indian',
+    italian_restaurant: 'italian',
+    japanese_restaurant: 'japanese',
+    korean_restaurant: 'korean',
+    mexican_restaurant: 'mexican',
+    mediterranean_restaurant: 'mediterranean',
+    pizza_restaurant: 'pizza',
+    seafood_restaurant: 'seafood',
+    thai_restaurant: 'thai',
+    vegetarian_restaurant: 'vegan',
+    cafe: 'cafe',
+    bar: 'bar',
+  };
+
+  return types
+    .map((t) => cuisineMap[t])
+    .filter((c) => c)
+    .slice(0, 3);
+}
+
+async function insertRestaurant(details) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/Restaurant`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      apikey: SERVICE_ROLE_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: details.name,
+      address: details.address,
+      city: details.city,
+      state: details.state,
+      zipCode: '00000',
+      latitude: details.latitude,
+      longitude: details.longitude,
+      cuisineTypes: details.cuisineTypes,
+      priceLevel: details.priceLevel,
+      rating: details.rating,
+      totalReviews: details.totalReviews,
+      phone: details.phone,
+      website: details.website,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`HTTP ${res.status}: ${error}`);
+  }
+
+  return res.json();
+}
+
+async function importRestaurants() {
+  console.log('\n🚀 Starting DMV restaurant import...\n');
+
+  let total = 0;
+  const imported = new Set();
+  const startTime = Date.now();
+
+  for (const loc of locations) {
+    console.log(`📍 Searching ${loc.name}...`);
+    const results = await searchRestaurants(loc.name, loc.lat, loc.lng);
+    console.log(`   Found ${results.length} results`);
+
+    for (const result of results) {
+      if (imported.has(result.place_id)) continue;
+
+      const details = await getPlaceDetails(result.place_id);
+      if (!details) continue;
+
+      details.city = loc.name.split(' ')[0];
+      details.state = loc.name.includes('MD') ? 'MD' : loc.name.includes('VA') ? 'VA' : 'DC';
+
+      try {
+        await insertRestaurant(details);
+        console.log(`   ✅ ${details.name} (${details.cuisineTypes.join(', ')})`);
+        total++;
+        imported.add(result.place_id);
+      } catch (error) {
+        console.log(`   ❌ ${details.name}: ${error.message}`);
+      }
+
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  }
+
+  const elapsed = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
+  console.log(`\n🎉 Import complete!`);
+  console.log(`   Total: ${total} restaurants`);
+  console.log(`   Time: ${elapsed} minutes`);
+  console.log(`\n✅ Database ready for Week 5-6 mobile UI\n`);
+}
+
+importRestaurants().catch((err) => {
+  console.error('Fatal error:', err.message);
+  process.exit(1);
+});
